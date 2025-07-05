@@ -36,7 +36,10 @@ export async function PUT(
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { tableName: string, id: string } }) { {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ tableName: string; id: string }> }
+) {
   const { tableName, id } = await params;
   const { connectionDetails } = await req.json();
 
