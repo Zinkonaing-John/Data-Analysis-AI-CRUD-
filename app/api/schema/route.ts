@@ -2,9 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase, queryDatabase, disconnectFromDatabase } from '../../../lib/db';
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const tableName = searchParams.get('tableName');
+export async function POST(req: NextRequest) {
+  const { tableName, connectionDetails } = await req.json();
 
   if (!tableName) {
     return new NextResponse(
@@ -15,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   let connection;
   try {
-    connection = await connectToDatabase();
+    connection = await connectToDatabase(connectionDetails);
     const columns = await queryDatabase(connection, `DESCRIBE ${tableName}`);
     const primaryKeyResult = await queryDatabase(connection, `SHOW KEYS FROM ${tableName} WHERE Key_name = 'PRIMARY'`);
     const primaryKey = (primaryKeyResult as any[]).map(row => row.Column_name);

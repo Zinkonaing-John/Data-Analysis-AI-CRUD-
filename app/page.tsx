@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ConnectionModal, {
   ConnectionDetails,
 } from "../components/ConnectionModal";
@@ -29,49 +29,9 @@ export default function Home() {
     setConnectionErrorMessage("");
   };
 
-  useEffect(() => {
-    const fetchTables = async () => {
-      if (!connectionDetails) return;
-
-      setConnectionStatus("connecting");
-      setConnectionErrorMessage("");
-      try {
-        const response = await fetch("/api/tables");
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to fetch tables.");
-        }
-        const tableNames = await response.json();
-        setTables(tableNames);
-        setConnectionStatus("connected");
-      } catch (err) {
-        setConnectionStatus("failed");
-        setConnectionErrorMessage((err as Error).message);
-      }
-    };
-
-    fetchTables();
-  }, [connectionDetails]);
-
-  
-
-  const fetchSchema = async (tableName: string) => {
-    try {
-      const response = await fetch(`/api/schema?tableName=${tableName}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch schema.");
-      }
-      const { columns, primaryKey } = await response.json();
-      setSchema(columns);
-      setPrimaryKey(primaryKey);
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  };
-
-  const handleQuery = async () => {
-    if (!query) {
-      console.log("Query is empty, not executing.");
+  const handleQuery = useCallback(async () => {
+    if (!query || !connectionDetails) {
+      console.log("Query is empty or not connected, not executing.");
       return;
     }
 
@@ -86,7 +46,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, connectionDetails }),
       });
 
       console.log("API Query Response:", response);
@@ -106,16 +66,72 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [query, connectionDetails]);
+
+  const fetchSchema = useCallback(
+    async (tableName: string) => {
+      if (!connectionDetails) return;
+      try {
+        const response = await fetch(`/api/schema`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ tableName, connectionDetails }),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch schema.");
+        }
+        const { columns, primaryKey } = await response.json();
+        setSchema(columns);
+        setPrimaryKey(primaryKey);
+      } catch (err) {
+        setError((err as Error).message);
+      }
+    },
+    [connectionDetails]
+  );
 
   useEffect(() => {
-    if (selectedTable) {
+    const fetchTables = async () => {
+      if (!connectionDetails) return;
+
+      setConnectionStatus("connecting");
+      setConnectionErrorMessage("");
+      try {
+        const response = await fetch("/api/tables", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ connectionDetails }),
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch tables.");
+        }
+        const tableNames = await response.json();
+        setTables(tableNames);
+        setConnectionStatus("connected");
+      } catch (err) {
+        setConnectionStatus("failed");
+        setConnectionErrorMessage((err as Error).message);
+      }
+    };
+
+    if (connectionDetails) {
+      fetchTables();
+    }
+  }, [connectionDetails]);
+
+  useEffect(() => {
+    if (selectedTable && connectionDetails) {
       console.log(`Selected table changed to: ${selectedTable}`);
       setQuery(`SELECT * FROM ${selectedTable}`);
       fetchSchema(selectedTable);
       handleQuery(); // Automatically fetch data when table is selected
     }
-  }, [selectedTable]);
+  }, [selectedTable, connectionDetails, fetchSchema, handleQuery]);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,7 +143,7 @@ export default function Home() {
       {/* Sidebar */}
       <aside className="w-80 bg-[#ede8e6] p-8 flex flex-col gap-8 border-r border-[#e0dbd7]">
         {/* Logo */}
-        <div className="text-4xl font-bold mb-4 text-black">logo</div>
+        <div className="text-4xl font-bold mb-4 text-black">SimplifyDB</div>
         {/* Create Dashboard Button */}
         <button
           onClick={() => setIsModalOpen(true)}
@@ -251,7 +267,7 @@ export default function Home() {
               />
               {/* Dropdown */}
               <select
-                className="ml-4 px-3 py-1 rounded-full border border-gray-300 text-base font-medium shadow-sm"
+                className="ml-4 px-3 py-1 rounded-full border border-gray-300 text-base font-medium shadow-sm text-black"
                 disabled={!connectionDetails || isLoading || !tables.length}
                 value={selectedTable}
                 onChange={(e) => setSelectedTable(e.target.value)}

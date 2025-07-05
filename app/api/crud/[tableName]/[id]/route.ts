@@ -1,15 +1,23 @@
+import { NextRequest, NextResponse } from "next/server";
+import {
+  connectToDatabase,
+  queryDatabase,
+  disconnectFromDatabase,
+} from "../../../../../lib/db";
 
-import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase, queryDatabase, disconnectFromDatabase } from '../../../../../lib/db';
-
-export async function PUT(req: NextRequest, { params }: { params: { tableName: string, id: string } }) {
-  const { tableName, id } = params;
-  const body = await req.json();
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ tableName: string; id: string }> }
+) {
+  const { tableName, id } = await params;
+  const { body, connectionDetails } = await req.json();
 
   let connection;
   try {
-    connection = await connectToDatabase();
-    const setClauses = Object.keys(body).map(key => `${key} = ?`).join(', ');
+    connection = await connectToDatabase(connectionDetails);
+    const setClauses = Object.keys(body)
+      .map((key) => `${key} = ?`)
+      .join(", ");
     const values = [...Object.values(body), id];
 
     const query = `UPDATE ${tableName} SET ${setClauses} WHERE id = ?`;
@@ -19,7 +27,7 @@ export async function PUT(req: NextRequest, { params }: { params: { tableName: s
   } catch (error) {
     return new NextResponse(
       JSON.stringify({ message: (error as Error).message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   } finally {
     if (connection) {
@@ -28,12 +36,13 @@ export async function PUT(req: NextRequest, { params }: { params: { tableName: s
   }
 }
 
-export async function function DELETE(req: NextRequest, { params }: { params: { tableName: string, id: string } }) {
-  const { tableName, id } = params;
+export async function DELETE(req: NextRequest, { params }: { params: { tableName: string, id: string } }) { {
+  const { tableName, id } = await params;
+  const { connectionDetails } = await req.json();
 
   let connection;
   try {
-    connection = await connectToDatabase();
+    connection = await connectToDatabase(connectionDetails);
     const query = `DELETE FROM ${tableName} WHERE id = ?`;
     await queryDatabase(connection, query, [id]);
 
@@ -41,7 +50,7 @@ export async function function DELETE(req: NextRequest, { params }: { params: { 
   } catch (error) {
     return new NextResponse(
       JSON.stringify({ message: (error as Error).message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   } finally {
     if (connection) {

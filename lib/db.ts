@@ -2,14 +2,14 @@
 import mysql from 'mysql2/promise';
 import { ConnectionDetails } from '../components/ConnectionModal';
 
-export const connectToDatabase = async (): Promise<mysql.Connection> => {
+export const connectToDatabase = async (details: ConnectionDetails & { password?: string }): Promise<mysql.Connection> => {
   try {
     const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
-      port: parseInt(process.env.DB_PORT || '3306', 10)
+      host: details.host,
+      user: details.username,
+      password: details.password,
+      database: details.dbName,
+      port: parseInt(details.port, 10)
     });
     // Test the connection
     await connection.query('SELECT 1');

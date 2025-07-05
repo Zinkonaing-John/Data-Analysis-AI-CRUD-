@@ -56,7 +56,9 @@ export default function ConnectionModal({
       });
 
       if (response.ok) {
-        onConnect({ dbName, dbType, host, port, username });
+        const detailsToSend = { dbName, dbType, host, port, username, password };
+        console.log("ConnectionModal: Sending details to onConnect", detailsToSend);
+        onConnect(detailsToSend);
         onClose();
       } else {
         const errorData = await response.json();

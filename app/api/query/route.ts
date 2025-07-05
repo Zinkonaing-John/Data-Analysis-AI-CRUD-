@@ -5,8 +5,8 @@ import { connectToDatabase, queryDatabase, disconnectFromDatabase } from '../../
 export async function POST(req: NextRequest) {
   let connection;
   try {
-    connection = await connectToDatabase();
-    const { query } = await req.json();
+    const { query, connectionDetails } = await req.json();
+    connection = await connectToDatabase(connectionDetails);
     const results = await queryDatabase(connection, query);
     return NextResponse.json(results);
   } catch (error) {
