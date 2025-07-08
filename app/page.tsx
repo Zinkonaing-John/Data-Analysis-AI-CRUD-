@@ -29,45 +29,6 @@ export default function Home() {
     setConnectionErrorMessage("");
   };
 
-  const handleQuery = useCallback(async () => {
-    if (!query || !connectionDetails) {
-      console.log("Query is empty or not connected, not executing.");
-      return;
-    }
-
-    console.log(`Executing query: ${query}`);
-    setIsLoading(true);
-    setError("");
-    setData([]);
-
-    try {
-      const response = await fetch("/api/query", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query, connectionDetails }),
-      });
-
-      console.log("API Query Response:", response);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API Query Error Data:", errorData);
-        throw new Error(errorData.message || "An error occurred");
-      }
-
-      const result = await response.json();
-      console.log("API Query Result (Data):", result);
-      setData(result);
-    } catch (err) {
-      console.error("Error during handleQuery:", err);
-      setError((err as Error).message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [query, connectionDetails]);
-
   const fetchSchema = useCallback(
     async (tableName: string) => {
       if (!connectionDetails) return;
@@ -90,6 +51,49 @@ export default function Home() {
       }
     },
     [connectionDetails]
+  );
+
+  const handleQuery = useCallback(
+    async (currentQuery?: string) => {
+      const queryToExecute = currentQuery || query;
+      if (!queryToExecute || !connectionDetails) {
+        console.log("Query is empty or not connected, not executing.");
+        return;
+      }
+
+      console.log(`Executing query: ${query}`);
+      setIsLoading(true);
+      setError("");
+      setData([]);
+
+      try {
+        const response = await fetch("/api/query", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query: queryToExecute, connectionDetails }),
+        });
+
+        console.log("API Query Response:", response);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("API Query Error Data:", errorData);
+          throw new Error(errorData.message || "An error occurred");
+        }
+
+        const result = await response.json();
+        console.log("API Query Result (Data):", result);
+        setData(result);
+      } catch (err) {
+        console.error("Error during handleQuery:", err);
+        setError((err as Error).message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [query, connectionDetails, fetchSchema]
   );
 
   useEffect(() => {
@@ -127,9 +131,11 @@ export default function Home() {
   useEffect(() => {
     if (selectedTable && connectionDetails) {
       console.log(`Selected table changed to: ${selectedTable}`);
-      setQuery(`SELECT * FROM ${selectedTable}`);
+      const newQuery = `SELECT * FROM ${selectedTable}`;
+      setQuery(newQuery);
       fetchSchema(selectedTable);
-      handleQuery(); // Automatically fetch data when table is selected
+      // Passing newQuery directly to handleQuery
+      handleQuery(newQuery);
     }
   }, [selectedTable, connectionDetails, fetchSchema, handleQuery]);
 
@@ -299,13 +305,14 @@ export default function Home() {
           {isLoading && <p>Loading...</p>}
           {error && <p className="text-red-500">{error}</p>}
 
-          {data.length > 0 && (
+          {data.length > 0 && connectionDetails && (
             <DataTable
               data={data}
               columns={schema}
               primaryKey={primaryKey}
               tableName={selectedTable}
               onRefresh={handleQuery}
+              connectionDetails={connectionDetails}
             />
           )}
         </div>

@@ -10,12 +10,44 @@ export async function POST(req: NextRequest) {
   try {
     const { connectionDetails } = await req.json();
     connection = await connectToDatabase(connectionDetails);
-    const tables = await queryDatabase(connection, "SHOW TABLES");
-    const tableNames = (tables as any[]).map(
-      (table) => Object.values(table)[0]
-    );
-    return NextResponse.json(tableNames);
+
+    // Use different queries for MySQL and PostgreSQL
+    let tables;
+    if (connectionDetails.dbType === "PostgreSQL") {
+      tables = await queryDatabase(
+        connection,
+        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
+      );
+      const tableNames = (tables as any[]).map((table) => table.table_name);
+      return NextResponse.json(tableNames);
+    } else {
+      // MySQL
+      tables = await queryDatabase(connection, "SHOW TABLES");
+      console.log("MySQL tables result:", tables);
+
+      if (!tables || !Array.isArray(tables)) {
+        console.error("Invalid tables result:", tables);
+        throw new Error("Failed to fetch tables from database");
+      }
+
+      // Handle different possible formats of SHOW TABLES result
+      const tableNames = (tables as any[]).map((table) => {
+        // The result might have different column names depending on MySQL version
+        if (table.Tables_in_database) {
+          return table.Tables_in_database;
+        } else if (table[`Tables_in_${connectionDetails.dbName}`]) {
+          return table[`Tables_in_${connectionDetails.dbName}`];
+        } else {
+          // Fallback to first value
+          return Object.values(table)[0];
+        }
+      });
+
+      console.log("Extracted table names:", tableNames);
+      return NextResponse.json(tableNames);
+    }
   } catch (error) {
+    console.error("Error fetching tables:", error);
     return new NextResponse(
       JSON.stringify({ message: (error as Error).message }),
       { status: 500, headers: { "Content-Type": "application/json" } }

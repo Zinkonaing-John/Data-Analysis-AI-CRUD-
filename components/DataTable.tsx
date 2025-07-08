@@ -3,12 +3,15 @@
 import { useState } from "react";
 import CrudModal from "./CrudModal";
 
+import { ConnectionDetails } from "./ConnectionModal";
+
 interface DataTableProps {
   data: any[];
   columns: any[];
   primaryKey: string[];
   tableName: string;
   onRefresh: () => void;
+  connectionDetails: ConnectionDetails;
 }
 
 export default function DataTable({
@@ -17,6 +20,7 @@ export default function DataTable({
   primaryKey,
   tableName,
   onRefresh,
+  connectionDetails,
 }: DataTableProps) {
   console.log("DataTable received data:", data);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,8 +44,9 @@ export default function DataTable({
         method,
         headers: {
           "Content-Type": "application/json",
+          "X-Connection-Details": JSON.stringify(connectionDetails),
         },
-        body: JSON.stringify(rowData),
+        body: JSON.stringify({ body: rowData }),
       });
 
       if (!response.ok) {
@@ -64,6 +69,10 @@ export default function DataTable({
           `/api/crud/${tableName}/${row[primaryKey[0]]}`,
           {
             method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Connection-Details": JSON.stringify(connectionDetails),
+            },
           }
         );
 
@@ -89,7 +98,7 @@ export default function DataTable({
           }}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:bg-blue-700 transition"
         >
-          Add Record
+          Add
         </button>
       </div>
       <table className="min-w-full bg-white rounded-lg shadow-lg">
@@ -121,15 +130,15 @@ export default function DataTable({
                       setSelectedRow(row);
                       setIsModalOpen(true);
                     }}
-                    className="w-4 mr-2 transform hover:text-purple-500 hover:scale-110"
+                    className="bg-blue-500 text-white px-3 py-1 rounded-md text-xs hover:bg-blue-600 transition mr-2"
                   >
-                    {/* Edit icon */}
+                    Update
                   </button>
                   <button
                     onClick={() => handleDelete(row)}
-                    className="w-4 mr-2 transform hover:text-red-500 hover:scale-110"
+                    className="bg-red-500 text-white px-3 py-1 rounded-md text-xs hover:bg-red-600 transition"
                   >
-                    {/* Delete icon */}
+                    Delete
                   </button>
                 </div>
               </td>

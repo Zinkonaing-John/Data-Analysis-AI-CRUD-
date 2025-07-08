@@ -10,7 +10,9 @@ export async function POST(
   { params }: { params: Promise<{ tableName: string }> }
 ) {
   const { tableName } = await params;
-  const { body, connectionDetails } = await req.json();
+  const { body } = await req.json();
+  const connectionDetailsString = req.headers.get("X-Connection-Details");
+  const connectionDetails = JSON.parse(connectionDetailsString || "{}");
 
   let connection;
   try {

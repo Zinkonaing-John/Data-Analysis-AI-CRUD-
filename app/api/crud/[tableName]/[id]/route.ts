@@ -10,7 +10,9 @@ export async function PUT(
   { params }: { params: Promise<{ tableName: string; id: string }> }
 ) {
   const { tableName, id } = await params;
-  const { body, connectionDetails } = await req.json();
+  const { body } = await req.json();
+  const connectionDetailsString = req.headers.get("X-Connection-Details");
+  const connectionDetails = JSON.parse(connectionDetailsString || "{}");
 
   let connection;
   try {
@@ -41,7 +43,8 @@ export async function DELETE(
   { params }: { params: Promise<{ tableName: string; id: string }> }
 ) {
   const { tableName, id } = await params;
-  const { connectionDetails } = await req.json();
+  const connectionDetailsString = req.headers.get("X-Connection-Details");
+  const connectionDetails = JSON.parse(connectionDetailsString || "{}");
 
   let connection;
   try {

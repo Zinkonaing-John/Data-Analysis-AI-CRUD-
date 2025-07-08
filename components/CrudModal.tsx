@@ -23,7 +23,7 @@ export default function CrudModal({
     if (initialData) {
       setFormData(initialData);
     } else {
-      setFormData({});
+      setFormData({ created_at: new Date().toISOString() });
     }
   }, [initialData]);
 
@@ -37,7 +37,12 @@ export default function CrudModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    const dataToSave = { ...formData };
+    if (dataToSave.created_at) {
+      const date = new Date(dataToSave.created_at);
+      dataToSave.created_at = date.toISOString().slice(0, 19).replace('T', ' ');
+    }
+    onSave(dataToSave);
   };
 
   return (
@@ -57,7 +62,8 @@ export default function CrudModal({
                 name={col.Field}
                 value={formData[col.Field] || ""}
                 onChange={handleChange}
-                className="w-full p-3 border rounded"
+                className="w-full p-3 border rounded text-black"
+                disabled={col.Field === 'created_at' || col.Field === 'id'}
               />
             </div>
           ))}

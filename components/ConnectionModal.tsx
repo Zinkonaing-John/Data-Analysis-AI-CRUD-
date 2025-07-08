@@ -42,6 +42,34 @@ export default function ConnectionModal({
     }
   }, [initialData]);
 
+  const [testStatus, setTestStatus] = useState<"success" | "error" | "loading" | "">("");
+
+  const handleTestConnect = async () => {
+    setTestStatus("loading");
+    setError("");
+
+    try {
+      const response = await fetch('/api/connect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ dbName, dbType, host, port, username, password }),
+      });
+
+      if (response.ok) {
+        setTestStatus("success");
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || "Failed to connect");
+        setTestStatus("error");
+      }
+    } catch (err) {
+      setError((err as Error).message);
+      setTestStatus("error");
+    }
+  };
+
   const handleConnect = async () => {
     setIsConnecting(true);
     setError("");
@@ -62,7 +90,7 @@ export default function ConnectionModal({
         onClose();
       } else {
         const errorData = await response.json();
-        setError(errorData.message || "Failed to connect");
+        setError(errorData.message || "Failed to connect. Please check the connection details and try again.");
       }
     } catch (err) {
       setError((err as Error).message);
@@ -125,10 +153,18 @@ export default function ConnectionModal({
         />
 
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        {testStatus === "success" && <p className="text-green-500 text-sm mb-4">Connection successful!</p>}
 
         <div className="flex justify-end gap-4">
           <button onClick={onClose} className="text-gray-600 font-semibold">
             Cancel
+          </button>
+          <button
+            onClick={handleTestConnect}
+            className="bg-gray-200 text-black px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-gray-300 transition disabled:bg-gray-400"
+            disabled={isConnecting}
+          >
+            {testStatus === "loading" ? "Testing..." : "Test Connection"}
           </button>
           <button
             onClick={handleConnect}
