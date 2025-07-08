@@ -7,9 +7,20 @@ import {
 
 export async function POST(req: NextRequest) {
   let connection;
+  let connectionDetails: any; // Declare connectionDetails here
+
   try {
-    const { connectionDetails } = await req.json();
-    connection = await connectToDatabase(connectionDetails);
+    if (process.env.NODE_ENV === 'production') {
+      // In production, try to connect using environment variables (Supabase)
+      connection = await connectToDatabase();
+      // For production, assume PostgreSQL if connected via env vars
+      connectionDetails = { dbType: "PostgreSQL" };
+    } else {
+      // In development, use connection details from the request body
+      const body = await req.json();
+      connectionDetails = body.connectionDetails;
+      connection = await connectToDatabase(connectionDetails);
+    }
 
     // Use different queries for MySQL and PostgreSQL
     let tables;

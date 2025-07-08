@@ -6,18 +6,32 @@ import {
 } from "../../../lib/db";
 
 export async function POST(req: NextRequest) {
-  const { tableName, connectionDetails } = await req.json();
-
-  if (!tableName) {
-    return new NextResponse(
-      JSON.stringify({ message: "Table name is required" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
   let connection;
+  let connectionDetails: any; // Declare connectionDetails here
+  let tableName: string;
+
   try {
-    connection = await connectToDatabase(connectionDetails);
+    if (process.env.NODE_ENV === 'production') {
+      // In production, try to connect using environment variables (Supabase)
+      connection = await connectToDatabase();
+      // For production, assume PostgreSQL if connected via env vars
+      connectionDetails = { dbType: "PostgreSQL" };
+      const body = await req.json();
+      tableName = body.tableName;
+    } else {
+      // In development, use connection details from the request body
+      const body = await req.json();
+      tableName = body.tableName;
+      connectionDetails = body.connectionDetails;
+      connection = await connectToDatabase(connectionDetails);
+    }
+
+    if (!tableName) {
+      return new NextResponse(
+        JSON.stringify({ message: "Table name is required" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     let columns, primaryKey;
 

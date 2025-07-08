@@ -11,12 +11,23 @@ export async function POST(
 ) {
   const { tableName } = await params;
   const { body } = await req.json();
-  const connectionDetailsString = req.headers.get("X-Connection-Details");
-  const connectionDetails = JSON.parse(connectionDetailsString || "{}");
 
   let connection;
+  let connectionDetails: any; // Declare connectionDetails here
+
   try {
-    connection = await connectToDatabase(connectionDetails);
+    if (process.env.NODE_ENV === 'production') {
+      // In production, try to connect using environment variables (Supabase)
+      connection = await connectToDatabase();
+      // For production, assume PostgreSQL if connected via env vars
+      connectionDetails = { dbType: "PostgreSQL" };
+    } else {
+      // In development, use connection details from the request header
+      const connectionDetailsString = req.headers.get("X-Connection-Details");
+      connectionDetails = JSON.parse(connectionDetailsString || "{}");
+      connection = await connectToDatabase(connectionDetails);
+    }
+
     const columns = Object.keys(body).join(", ");
     const values = Object.values(body);
     const placeholders = values.map(() => "?").join(", ");
