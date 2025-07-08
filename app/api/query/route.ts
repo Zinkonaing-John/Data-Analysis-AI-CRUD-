@@ -26,8 +26,9 @@ export async function POST(req: NextRequest) {
     const results = await queryDatabase(connection, query);
     return NextResponse.json(results);
   } catch (error) {
+    console.error("API Query Error:", error);
     return new NextResponse(
-      JSON.stringify({ message: (error as Error).message }),
+      JSON.stringify({ message: (error as Error).message || "An unknown error occurred during query execution." }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   } finally {
