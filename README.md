@@ -1,37 +1,14 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+ 프로젝트 설명 (Project Description)
 
-## Getting Started
 
-First, run the development server:
+  이 프로젝트는 사용자가 데이터베이스에 연결하고 데이터를 효율적으로 관리할 수 있도록 설계된 웹 애플리케이션입니다. 주요 기능은 다음과 같습니다:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+   * 유연한 데이터베이스 연결: 로컬 MySQL 데이터베이스뿐만 아니라 Supabase와 같은 클라우드 기반 PostgreSQL 데이터베이스에도 연결할 수 있습니다.
+   * 데이터 분석 및 쿼리: 사용자가 직접 SQL 쿼리를 실행하여 데이터를 조회하고 분석할 수 있는 인터페이스를 제공합니다.
+   * CRUD 작업: 테이블 데이터를 추가(Create), 조회(Read), 업데이트(Update), 삭제(Delete)하는 기능을 통해 데이터를 쉽게 조작할 수 있습니다.
+   * 직관적인 UI: 데이터 테이블을 시각적으로 표시하고, 레코드 추가/수정 시 자동 ID 및 타임스탬프(created_at) 자동 채우기 기능을 제공하여 사용자 경험을 향상시킵니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+  이 애플리케이션은 데이터 관리 및 분석 작업을 간소화하고, 다양한 데이터 소스에 대한 접근성을 높이는 것을 목표로 합니다.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# Updated for deployment
